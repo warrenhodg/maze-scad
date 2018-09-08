@@ -219,30 +219,41 @@ func (maze *SquareMaze) SCad(rs RenderSettings) string {
 	s += "$fa = 10;    // Don't generate larger angles than 5 degrees\n"
 	s += "\n"
 
-	s += fmt.Sprintf("module maze() color(\"red\") linear_extrude(height = %6f) square([%6f, %6f]);\n", rs.blockDepth, float32(maze.width)*rs.blockSize, float32(maze.height)*rs.blockSize)
-	s += fmt.Sprintf("module ball() color(\"green\") sphere(%6f);\n", rs.ballRadius)
-	s += fmt.Sprintf("module hcylinder() color(\"green\") rotate([0, 90, 0]) cylinder(h = %6f, r = %6f);\n", rs.blockSize, rs.ballRadius)
-	s += fmt.Sprintf("module vcylinder() color(\"green\") rotate([-90, 0, 0]) cylinder(h = %6f, r = %6f);\n", rs.blockSize, rs.ballRadius)
+	s += fmt.Sprintf("mazeWidth = %d;\n", maze.width)
+	s += fmt.Sprintf("mazeHeight = %d;\n", maze.height)
+	s += fmt.Sprintf("blockSize = %6f;\n", rs.blockSize)
+	s += fmt.Sprintf("blockDepth = %6f;\n", rs.blockDepth)
+	s += fmt.Sprintf("ballRadius = %6f;\n", rs.ballRadius)
+	s += fmt.Sprintf("ballDepth = %6f;\n", rs.ballDepth)
+	s += "\n"
 
-	s += fmt.Sprintf("translate([%6f, %6f, %6f]) {\n", (float32(maze.width)*rs.blockSize)/-2, (float32(maze.height)*rs.blockSize)/-2, float32(0))
+	s += "module maze() color(\"red\") linear_extrude(height = blockDepth) square([mazeWidth * blockSize, mazeHeight*blockSize]);\n"
+	s += "\n"
+	s += "module ball() color(\"green\") sphere(ballRadius);\n"
+	s += "\n"
+	s += "module hcylinder() color(\"green\") rotate([0, 90, 0]) cylinder(h = blockSize, r = ballRadius);\n"
+	s += "\n"
+	s += "module vcylinder() color(\"green\") rotate([-90, 0, 0]) cylinder(h = blockSize, r = ballRadius);\n"
+	s += "\n"
+
+	s += "translate([mazeWidth * blockSize / -2, mazeHeight * blockSize / -2, 0]) {\n"
 	s += "  difference() {\n"
-	s += fmt.Sprintf("    maze();\n")
+	s += "    maze();\n"
 
 	s += "    union() {\n"
 	for y := 0; y < maze.height; y++ {
 		for x := 0; x < maze.width; x++ {
-			s += fmt.Sprintf("      translate([%6f, %6f, %6f]) {\n", (float32(x)+0.5)*rs.blockSize, (float32(y)+0.5)*rs.blockSize, rs.ballDepth)
-
+			s += fmt.Sprintf("      translate([(%d + 0.5) * blockSize, (%d + 0.5) * blockSize, ballDepth]) {\n", x, y)
 			s += "        ball();\n"
 
 			i1 := x + y*maze.width
 			b1 := maze.blocks[i1]
 
 			if !b1.walls[2] {
-				s += fmt.Sprintf("        hcylinder();\n")
+				s += "        hcylinder();\n"
 			}
 			if !b1.walls[3] {
-				s += fmt.Sprintf("        vcylinder();\n")
+				s += "        vcylinder();\n"
 			}
 			s += "      }\n"
 		}
